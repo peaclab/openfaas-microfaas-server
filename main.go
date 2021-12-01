@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os/exec"
+	"strings"
 )
 
 type Payload struct {
@@ -50,18 +51,24 @@ func returnFunction(w http.ResponseWriter, r *http.Request) {
 func runFunction(w http.ResponseWriter, r *http.Request) {
 	reqBody, _ := ioutil.ReadAll(r.Body)
 	var payload Payload
+	res := Response{}
 	json.Unmarshal(reqBody, &payload)
 	params, _ := json.Marshal(payload.Params)
 	src, _ := json.Marshal(payload.Src)
-	cmd := exec.Command("python", "run_script.py", string(src), string(params))
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		json.NewEncoder(w).Encode(err)
-		fmt.Println(err)
+	if strings.ToLower(payload.Lang) == "python" {
+		cmd := exec.Command("python", "run_script.py", string(src), string(params))
+		out, err := cmd.CombinedOutput()
+		if err != nil {
+			res = Response{Fid: payload.Fid, Result: err.Error()}
+			fmt.Println(err)
+		} else {
+			res = Response{Fid: payload.Fid, Result: string(out)}
+		}
 	} else {
-		res := Response{Fid: payload.Fid, Result: string(out)}
-		json.NewEncoder(w).Encode(res)
+		res = Response{Fid: payload.Fid, Result: "Language not supported"}
 	}
+	json.NewEncoder(w).Encode(res)
+
 	//fmt.Println(string(out))
 	//fmt.Fprintf(w, "%+v", string(reqBody))
 }
