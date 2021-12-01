@@ -9,18 +9,20 @@ import (
 	"net/http"
 	"os/exec"
 	"strings"
+	"time"
 )
 
 type Payload struct {
 	Fid    string `json:"fid"`
 	Src    string `json:"src"`
-	Params string `json:"params"`
+	Params string `json:"params,omitempty"`
 	Lang   string `json:"lang"`
 }
 type Response struct {
-	Fid    string `json:"fid"`
-	Result string `json:"result"`
-	Error  string `json:"error,omitempty"`
+	Fid         string        `json:"fid"`
+	TimeElapsed time.Duration `json:"time_elapsed"`
+	Result      string        `json:"result"`
+	Error       string        `json:"error,omitempty"`
 }
 
 var Payloads []Payload
@@ -57,19 +59,22 @@ func runFunction(w http.ResponseWriter, r *http.Request) {
 	params, _ := json.Marshal(payload.Params)
 	src, _ := json.Marshal(payload.Src)
 	if strings.ToLower(payload.Lang) == "python" {
+		start := time.Now()
 		cmd := exec.Command("python", "run_script.py", string(src), string(params))
 		out, err := cmd.CombinedOutput()
+		t := time.Now()
 		//fmt.Println(string(out))
 
 		if err != nil {
-			res = Response{Fid: payload.Fid, Result: string(out), Error: err.Error()}
+			res = Response{Fid: payload.Fid, TimeElapsed: t.Sub(start), Result: string(out), Error: err.Error()}
 			fmt.Println(err)
 		} else {
-			res = Response{Fid: payload.Fid, Result: string(out)}
+			res = Response{Fid: payload.Fid, TimeElapsed: t.Sub(start), Result: string(out)}
 		}
 	} else {
 		res = Response{Fid: payload.Fid, Result: "Language not supported"}
 	}
+
 	json.NewEncoder(w).Encode(res)
 
 	//fmt.Fprintf(w, "%+v", string(reqBody))
