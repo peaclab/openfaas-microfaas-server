@@ -16,6 +16,10 @@ type Payload struct {
 	Params string `json:"params"`
 	Lang   string `json:"lang"`
 }
+type Response struct {
+	Fid    string `json:"fid"`
+	Result string `json:"result"`
+}
 
 var Payloads []Payload
 
@@ -47,15 +51,18 @@ func runFunction(w http.ResponseWriter, r *http.Request) {
 	reqBody, _ := ioutil.ReadAll(r.Body)
 	var payload Payload
 	json.Unmarshal(reqBody, &payload)
-	json.NewEncoder(w).Encode(payload.Params)
 	params, _ := json.Marshal(payload.Params)
 	src, _ := json.Marshal(payload.Src)
 	cmd := exec.Command("python", "run_script.py", string(src), string(params))
 	out, err := cmd.CombinedOutput()
 	if err != nil {
+		json.NewEncoder(w).Encode(err)
 		fmt.Println(err)
+	} else {
+		res := Response{Fid: payload.Fid, Result: string(out)}
+		json.NewEncoder(w).Encode(res)
 	}
-	fmt.Println(string(out))
+	//fmt.Println(string(out))
 	//fmt.Fprintf(w, "%+v", string(reqBody))
 }
 func returnAllFunctions(w http.ResponseWriter, r *http.Request) {
