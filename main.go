@@ -20,6 +20,7 @@ type Payload struct {
 type Response struct {
 	Fid    string `json:"fid"`
 	Result string `json:"result"`
+	Error  string `json:"error,omitempty"`
 }
 
 var Payloads []Payload
@@ -58,8 +59,10 @@ func runFunction(w http.ResponseWriter, r *http.Request) {
 	if strings.ToLower(payload.Lang) == "python" {
 		cmd := exec.Command("python", "run_script.py", string(src), string(params))
 		out, err := cmd.CombinedOutput()
+		//fmt.Println(string(out))
+
 		if err != nil {
-			res = Response{Fid: payload.Fid, Result: err.Error()}
+			res = Response{Fid: payload.Fid, Result: string(out), Error: err.Error()}
 			fmt.Println(err)
 		} else {
 			res = Response{Fid: payload.Fid, Result: string(out)}
@@ -69,7 +72,6 @@ func runFunction(w http.ResponseWriter, r *http.Request) {
 	}
 	json.NewEncoder(w).Encode(res)
 
-	//fmt.Println(string(out))
 	//fmt.Fprintf(w, "%+v", string(reqBody))
 }
 func returnAllFunctions(w http.ResponseWriter, r *http.Request) {
