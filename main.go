@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"strings"
 	"time"
+	"os"
 )
 
 type Payload struct {
@@ -56,14 +57,34 @@ func runFunction(w http.ResponseWriter, r *http.Request) {
 	var payload Payload
 	res := Response{}
 	json.Unmarshal(reqBody, &payload)
-	params, _ := json.Marshal(payload.Params)
-	src, _ := json.Marshal(payload.Src)
-	if strings.ToLower(payload.Lang) == "python" {
+	params:= payload.Params
+	src:= payload.Src
+	
+	err := os.WriteFile("src.py",[]byte(src), 0644)
+	if err != nil {
+		panic(err)
+	}
+	
+	if strings.ToLower(payload.Lang) == "micropython"{
+		//fmt.Println(string(out))	
 		start := time.Now()
-		cmd := exec.Command("python", "run_script.py", string(src), string(params))
+		cmd := exec.Command( "micropython",  "src.py", params)
 		out, err := cmd.CombinedOutput()
 		t := time.Now()
 		//fmt.Println(string(out))
+
+		if err != nil {
+			res = Response{Fid: payload.Fid, TimeElapsed: t.Sub(start), Result: string(out), Error: err.Error()}
+			fmt.Println(err)
+		} else {
+			res = Response{Fid: payload.Fid, TimeElapsed: t.Sub(start), Result: string(out)}
+		}
+
+	} else if strings.ToLower(payload.Lang) == "python" {
+		start := time.Now()
+		cmd := exec.Command("python", "src.py",  params)
+		out, err := cmd.CombinedOutput()
+		t := time.Now()
 
 		if err != nil {
 			res = Response{Fid: payload.Fid, TimeElapsed: t.Sub(start), Result: string(out), Error: err.Error()}
