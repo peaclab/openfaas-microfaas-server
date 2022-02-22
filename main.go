@@ -60,7 +60,7 @@ func runFunction(w http.ResponseWriter, r *http.Request) {
 	params:= payload.Params
 	src:= payload.Src
 	
-	err := os.WriteFile("src.py",[]byte(src), 0644)
+	err := os.WriteFile("/root/src.py",[]byte(src), 0644)
 	if err != nil {
 		panic(err)
 	}
@@ -68,7 +68,7 @@ func runFunction(w http.ResponseWriter, r *http.Request) {
 	if strings.ToLower(payload.Lang) == "micropython"{
 		//fmt.Println(string(out))	
 		start := time.Now()
-		cmd := exec.Command( "micropython",  "src.py", params)
+		cmd := exec.Command( "micropython",  "/root/src.py", params)
 		out, err := cmd.CombinedOutput()
 		t := time.Now()
 		//fmt.Println(string(out))
@@ -82,7 +82,7 @@ func runFunction(w http.ResponseWriter, r *http.Request) {
 
 	} else if strings.ToLower(payload.Lang) == "python" {
 		start := time.Now()
-		cmd := exec.Command("python", "src.py",  params)
+		cmd := exec.Command("python", "/root/src.py",  params)
 		out, err := cmd.CombinedOutput()
 		t := time.Now()
 
