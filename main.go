@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	b64 "encoding/base64"
 	"fmt"
 	"github.com/gorilla/mux"
 	"io/ioutil"
@@ -11,6 +12,7 @@ import (
 	"strings"
 	"time"
 	"os"
+	"strconv"
 )
 
 type Payload struct {
@@ -58,9 +60,11 @@ func runFunction(w http.ResponseWriter, r *http.Request) {
 	res := Response{}
 	json.Unmarshal(reqBody, &payload)
 	params:= payload.Params
-	src:= payload.Src
-	
-	err := os.WriteFile("/root/src.py",[]byte(src), 0644)
+	// src:= payload.Src
+	data, _ := b64.StdEncoding.DecodeString(payload.Src)
+	s2, _ := strconv.Unquote(string(data))
+	fmt.Println(s2)
+	err := os.WriteFile("/root/src.py",[]byte(s2), 0644)
 	if err != nil {
 		panic(err)
 	}
