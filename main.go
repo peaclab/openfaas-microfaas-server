@@ -13,6 +13,7 @@ import (
 	"time"
 	"os"
 	"strconv"
+	"net"
 )
 
 type Payload struct {
@@ -36,14 +37,31 @@ func homePage(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Endpoint Hit: homePage")
 }
 
+
 func handleRequests() {
 	myRouter := mux.NewRouter().StrictSlash(true)
 	myRouter.HandleFunc("/", homePage)
 	myRouter.HandleFunc("/showfunctions", returnAllFunctions)
 	myRouter.HandleFunc("/showfunctions/{fid}", returnFunction)
 	myRouter.HandleFunc("/run", runFunction).Methods("POST")
+	// updateHealth()
+	// log.Fatal(http.ListenAndServe(":8080", myRouter))
+
+	l, err := net.Listen("tcp", ":8080")
+	if err != nil {
+		log.Fatal("Error listening")
+	}
+
+	// Signal that server is open for business. 
 	updateHealth()
-	log.Fatal(http.ListenAndServe(":8080", myRouter))
+	if err := http.Serve(l, myRouter); err != nil {
+		// handle error
+		log.Fatal("Error serving")
+
+	}
+	
+
+	
 }
 func returnFunction(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Endpoint Hit: returnFunction")
