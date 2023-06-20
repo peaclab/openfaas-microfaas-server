@@ -1,4 +1,4 @@
-# openfaas-server
+# OpenFaas-server
 ## Run Server
 `go build main.go`
 ## Usage
